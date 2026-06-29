@@ -2,51 +2,55 @@ Bootstrap: docker
 From: ubuntu:22.04
 
 %post
-    # 1. Essential system tools install 
-    apt-get update && apt-get install -y \
+    # 1. Essential system tools install (Clean & Minimal)
+    apt-get update && apt-get install -y --no-install-recommends \
         wget \
         curl \
         bzip2 \
         ca-certificates \
         git \
-        samtools \
         python3 \
-        pip
+        python3-pip \
+        gawk
     
     # 2. Miniconda install 
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
     bash miniconda.sh -b -p /opt/conda
     rm miniconda.sh
+    
+    # Make conda instantly available during build
     export PATH=/opt/conda/bin:$PATH
 
-    # Channels set for bioinformatics tools
+    # Channels setup for bioinformatics tools
     conda config --add channels defaults
     conda config --add channels bioconda
     conda config --add channels conda-forge
     conda config --set channel_priority strict
 
-    # 3.Clair3 installation through conda
-    conda install -y clair3
+    # 3. Install Clair3, Minimap2, and Samtools together in base environment
+    # Is se saare dependencies automatic resolve ho jate hain
+    conda install -y clair3 minimap2 samtools
 
-    # Clean up for container size
+    # Clean up to keep container size as small as possible
     apt-get clean && rm -rf /var/lib/apt/lists/*
     conda clean -a -y
 
 %environment
-    # paths active during container running
+    # Paths active during container runtime
     export PATH=/opt/conda/bin:$PATH
     export LC_ALL=C
 
 %runscript
     echo "=========================================================="
-    echo " Welcome to Clinical Genomics Container (Clair3 Only)"
+    echo " Welcome to Clinical Genomics Container"
     echo "=========================================================="
     echo "Checking installed tools versions:"
-    echo -n "Clair3: " && run_clair3.sh --version 2>&1 | head -n 1
+    echo -n "Clair3:   " && run_clair3.sh --version 2>&1 | head -n 1
+    echo -n "Minimap2: " && minimap2 --version
     echo -n "Samtools: " && samtools --version | head -n 1
     echo "=========================================================="
 
 %labels
     Maintainer Eiesha Asif
     Version v3.0
-    Description Variant Calling Pipeline Container with Clair3
+    Description Complete End-to-End Variant Calling Pipeline Container (Minimap2 + Samtools + Clair3)

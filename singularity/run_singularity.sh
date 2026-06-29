@@ -11,14 +11,14 @@ OUTPUT_DIR="/mnt/f/New Volume (F:)/variant_output"
 
 # 1. Build the container if it doesn't exist
 if [ ! -f "$CONTAINER_NAME" ]; then
-    echo "Building Singularity container with Clair3..."
+    echo "Building Singularity container with Clair3"
     sudo singularity build "$CONTAINER_NAME" "$RECIPE_FILE"
 fi
 
 echo "Testing Clair3 inside container..."
 singularity run "$CONTAINER_NAME"
 
-echo "Starting Clair3 Variant Calling Example..."
+echo "Starting Clair3 Variant Calling "
 # singularity exec -B /mnt:/mnt "$CONTAINER_NAME" \
 #   run_clair3.sh \
 #   --bam_fn="$INPUT_BAM" \

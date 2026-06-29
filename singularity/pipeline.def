@@ -28,7 +28,7 @@ From: ubuntu:22.04
     conda config --set channel_priority strict
 
     # 3. Install Clair3, Minimap2, and Samtools together in base environment
-    # Is se saare dependencies automatic resolve ho jate hain
+ 
     conda install -y clair3 minimap2 samtools
 
     # Clean up to keep container size as small as possible

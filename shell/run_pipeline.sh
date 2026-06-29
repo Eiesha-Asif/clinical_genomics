@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script ko kisi bhi error par fauran rokne ke liye
+# to stop error
 set -e
 
 echo "=========================================================="
@@ -8,17 +8,17 @@ echo "Starting Pure Bash Genomic Pipeline (No Containers/Nextflow)"
 echo "=========================================================="
 
 # --- 1. Paths and Parameters Setup ---
-# Apne experimental files ke paths yahan set karein
+# Apne experimental files paths setting
 FASTQ_INPUT="/mnt/f/New Volume (F:)/raw_reads.fastq.gz"
 REF_GENOME="/mnt/f/New Volume (F:)/ref_genome.fasta"
 OUTPUT_DIR="/mnt/f/New Volume (F:)/nextflow_variant_output"
 
-# Clair3 specific parameters (Aapka local conda/system path)
+# Clair3 specific parameters (local conda/system path)
 MODEL_PATH="/opt/conda/bin/clair3_models/ont"
 PLATFORM="ont"
 THREADS=4
 
-# Interim files ke liye temporary folder aur output folders banana
+# making temporary and output folders for Interim files 
 ALIGN_DIR="${OUTPUT_DIR}/alignment"
 VARIANT_DIR="${OUTPUT_DIR}/variants"
 
@@ -33,13 +33,13 @@ minimap2 -ax map-ont -t "$THREADS" "$REF_GENOME" "$FASTQ_INPUT" > "${ALIGN_DIR}/
 # --- 3. Step 2: Convert SAM to BAM, Sort, and Index using samtools ---
 echo -e "\n[STEP 2] Sorting and Indexing BAM file..."
 
-# SAM ko BAM mein convert aur sort karna
+# SAM to BAM  convert and sorting
 samtools sort -@ "$THREADS" -o "${ALIGN_DIR}/sorted.bam" "${ALIGN_DIR}/aligned.sam"
 
-# Sorted BAM ki index (.bai) file banana
+# Sorted BAM index (.bai) file 
 samtools index -@ "$THREADS" "${ALIGN_DIR}/sorted.bam"
 
-# Space bachane ke liye temporary heavy SAM file delete karna
+# Temporary heavy SAM file delete to save space 
 rm "${ALIGN_DIR}/aligned.sam"
 
 # --- 4. Step 3: Variant Calling using Clair3 ---

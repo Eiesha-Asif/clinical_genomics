@@ -1,30 +1,46 @@
 #!/bin/bash
 set -e
 
-CONTAINER_NAME="clinical_pipeline.sif"
-RECIPE_FILE="pipeline.def"
+# --- Configuration ---
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONTAINER_DIR="${SCRIPT_DIR}/containers"
+CONTAINER_NAME="${CONTAINER_DIR}/pipeline.sif"
+RECIPE_FILE="${SCRIPT_DIR}/Singularity.def"
 
-# Real paths setup
+# Real Windows/WSL paths setup
+FASTQ_INPUT="/mnt/f/New Volume (F:)/raw_reads.fastq.gz"
 REF_GENOME="/mnt/f/New Volume (F:)/ref_genome.fasta"
-INPUT_BAM="/mnt/f/New Volume (F:)/aligned_reads.bam"
-OUTPUT_DIR="/mnt/f/New Volume (F:)/variant_output"
+OUTPUT_DIR="/mnt/f/New Volume (F:)/nextflow_variant_output"
+
+# Ensure containers directory exists
+mkdir -p "$CONTAINER_DIR"
 
 # 1. Build the container if it doesn't exist
 if [ ! -f "$CONTAINER_NAME" ]; then
-    echo "Building Singularity container with Clair3"
+    echo "=========================================================="
+    echo "Building Singularity container from recipe..."
+    echo "=========================================================="
     sudo singularity build "$CONTAINER_NAME" "$RECIPE_FILE"
+else
+    echo "Container already exists at: $CONTAINER_NAME"
 fi
 
-echo "Testing Clair3 inside container..."
+# 2. Test the container integrity
+echo "Testing tools inside container..."
 singularity run "$CONTAINER_NAME"
 
-echo "Starting Clair3 Variant Calling "
-# singularity exec -B /mnt:/mnt "$CONTAINER_NAME" \
-#   run_clair3.sh \
-#   --bam_fn="$INPUT_BAM" \
-#   --ref_fn="$REF_GENOME" \
-#   --output="$OUTPUT_DIR" \
-#   --platform="ont" \
-#   --model_path="/opt/conda/bin/clair3_models/ont"
+# 3. Launch the Nextflow Pipeline with Singularity Profile
+echo "=========================================================="
+echo "Starting End-to-End Nextflow Genomic Pipeline"
+echo "=========================================================="
 
-echo "Workflow configuration script ready for Clair3."
+nextflow run main.nf \
+    -profile singularity \
+    --fastq "$FASTQ_INPUT" \
+    --ref_genome "$REF_GENOME" \
+    --outdir "$OUTPUT_DIR" \
+    --threads 4
+
+echo "=========================================================="
+echo "Pipeline finished successfully!"
+echo "=========================================================="

@@ -8,7 +8,7 @@ CONTAINER_NAME="${CONTAINER_DIR}/pipeline.sif"
 RECIPE_FILE="${SCRIPT_DIR}/Singularity.def"
 
 # --- Real Windows/WSL Paths Setup ---
-# Hum pure /mnt/f ko bind karenge taake container in paths ko access kar sake
+# /mnt/f for container in paths access 
 REF_GENOME="/mnt/f/New Volume (F:)/ref_genome.fasta"
 INPUT_BAM="/mnt/f/New Volume (F:)/aligned_reads.bam"
 OUTPUT_DIR="/mnt/f/New Volume (F:)/nextflow_variant_output"

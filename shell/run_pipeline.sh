@@ -1,42 +1,59 @@
 #!/bin/bash
-# Exit immediately if a command exits with a non-zero status
+
+# Script ko kisi bhi error par fauran rokne ke liye
 set -e
 
-echo "========================================="
-echo " Starting Clinical Genomics Shell Pipeline"
-echo "========================================="
+echo "=========================================================="
+echo "Starting Pure Bash Genomic Pipeline (No Containers/Nextflow)"
+echo "=========================================================="
 
-# 1. Paths configuration (Windows F: drive paths accessed via WSL)
+# --- 1. Paths and Parameters Setup ---
+# Apne experimental files ke paths yahan set karein
+FASTQ_INPUT="/mnt/f/New Volume (F:)/raw_reads.fastq.gz"
 REF_GENOME="/mnt/f/New Volume (F:)/ref_genome.fasta"
-INPUT_BAM="/mnt/f/New Volume (F:)/aligned_reads.bam"
-OUTPUT_DIR="/mnt/f/New Volume (F:)/shell_variant_output"
+OUTPUT_DIR="/mnt/f/New Volume (F:)/nextflow_variant_output"
+
+# Clair3 specific parameters (Aapka local conda/system path)
 MODEL_PATH="/opt/conda/bin/clair3_models/ont"
 PLATFORM="ont"
+THREADS=4
 
-# 2. Input validation checks
-if [ ! -f "$REF_GENOME" ]; then
-    echo "ERROR: Reference genome missing at: $REF_GENOME"
-    exit 1
-fi
+# Interim files ke liye temporary folder aur output folders banana
+ALIGN_DIR="${OUTPUT_DIR}/alignment"
+VARIANT_DIR="${OUTPUT_DIR}/variants"
 
-if [ ! -f "$INPUT_BAM" ]; then
-    echo "ERROR: Input BAM file missing at: $INPUT_BAM"
-    exit 1
-fi
+mkdir -p "$ALIGN_DIR"
+mkdir -p "$VARIANT_DIR"
 
-echo "All input files validated successfully."
-echo "Running Clair3 Variant Calling via Shell..."
+# --- 2. Step 1: Alignment using minimap2 ---
+echo -e "\n[STEP 1] Aligning Raw FASTQ reads to Reference Genome..."
 
-# 3. Execution of Clair3 command directly in Bash environment
+minimap2 -ax map-ont -t "$THREADS" "$REF_GENOME" "$FASTQ_INPUT" > "${ALIGN_DIR}/aligned.sam"
+
+# --- 3. Step 2: Convert SAM to BAM, Sort, and Index using samtools ---
+echo -e "\n[STEP 2] Sorting and Indexing BAM file..."
+
+# SAM ko BAM mein convert aur sort karna
+samtools sort -@ "$THREADS" -o "${ALIGN_DIR}/sorted.bam" "${ALIGN_DIR}/aligned.sam"
+
+# Sorted BAM ki index (.bai) file banana
+samtools index -@ "$THREADS" "${ALIGN_DIR}/sorted.bam"
+
+# Space bachane ke liye temporary heavy SAM file delete karna
+rm "${ALIGN_DIR}/aligned.sam"
+
+# --- 4. Step 3: Variant Calling using Clair3 ---
+echo -e "\n[STEP 3] Running Clair3 Variant Calling..."
+
 run_clair3.sh \
-    --bam_fn="$INPUT_BAM" \
+    --bam_fn="${ALIGN_DIR}/sorted.bam" \
     --ref_fn="$REF_GENOME" \
-    --output="$OUTPUT_DIR" \
+    --output="$VARIANT_DIR" \
     --platform="$PLATFORM" \
     --model_path="$MODEL_PATH" \
-    --threads=2
+    --threads="$THREADS"
 
-echo "========================================="
-echo " Shell Pipeline Completed Successfully!"
-echo " Results saved in: $OUTPUT_DIR"
-echo "========================================="
+echo "=========================================================="
+echo "Pipeline Completed Successfully!"
+echo "Final Variants VCF located at: ${VARIANT_DIR}/merge_output.vcf.gz"
+echo "=========================================================="

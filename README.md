@@ -75,13 +75,16 @@ The core operations designed within this clinical pipeline perform the following
 2.BAM Preprocessing: Sorting and indexing the generated alignment files using Samtools to optimize processing speed.
 
 3.Clair3 Variant Calling: Processing the sorted BAM files inside isolated environments to achieve high-accuracy SNP and INDEL calling.
+
 ---
 Output
 Upon successful completion, the workflow delivers streamlined clinical genomics outputs:
 
 Clair3 Results: A compressed Variant Call Format folder containing merge_output.vcf.gz and its respective index (merge_output.vcf.gz.tbi) containing high-confidence variant calls.
+
 ---
 Version Control Cleanliness: All intermediate operational directories (such as Nextflow's work/ folder), hidden runtime logs (.nextflow.log*), generated execution outputs, and heavy .sif binary containers are explicitly excluded from Git version control via the .gitignore configuration to keep the repository lightweight.
+
 ---
 Maintained by: Eiesha Asif
 ---

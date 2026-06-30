@@ -3,7 +3,7 @@ set -e
 
 # --- Configuration & Paths ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Aapke actual structure ke mutabiq singularity folder main project directory mein hai
+#the singularity folder is located in the main project directory."
 CONTAINER_NAME="${SCRIPT_DIR}/../singularity/pipeline.sif"
 RECIPE_FILE="${SCRIPT_DIR}/../singularity/pipeline.def"
 
@@ -12,7 +12,7 @@ DATA_DIR="/mnt/f/New Volume (F:)"
 REF_GENOME="${DATA_DIR}/ref_genome.fasta"
 INPUT_FASTQ="${DATA_DIR}/sample_reads.fastq"  # Raw Input Data
 
-# Intermediate files (Jo workflow process karega)
+# Intermediate files (for workflow process)
 OUTPUT_BAM="${DATA_DIR}/aligned_reads.bam"
 SORTED_BAM="${DATA_DIR}/sorted_reads.bam"
 OUTPUT_DIR="${DATA_DIR}/shell_variant_output"

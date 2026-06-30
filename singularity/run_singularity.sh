@@ -1,52 +1,70 @@
 #!/bin/bash
 set -e
 
-# --- Configuration ---
+# --- Configuration & Paths ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONTAINER_DIR="${SCRIPT_DIR}/containers"
-CONTAINER_NAME="${CONTAINER_DIR}/pipeline.sif"
-RECIPE_FILE="${SCRIPT_DIR}/Singularity.def"
+# Aapke actual structure ke mutabiq singularity folder main project directory mein hai
+CONTAINER_NAME="${SCRIPT_DIR}/../singularity/pipeline.sif"
+RECIPE_FILE="${SCRIPT_DIR}/../singularity/pipeline.def"
 
 # --- Real Windows/WSL Paths Setup ---
-# /mnt/f for container in paths access 
-REF_GENOME="/mnt/f/New Volume (F:)/ref_genome.fasta"
-INPUT_BAM="/mnt/f/New Volume (F:)/aligned_reads.bam"
-OUTPUT_DIR="/mnt/f/New Volume (F:)/nextflow_variant_output"
+DATA_DIR="/mnt/f/New Volume (F:)"
+REF_GENOME="${DATA_DIR}/ref_genome.fasta"
+INPUT_FASTQ="${DATA_DIR}/sample_reads.fastq"  # Raw Input Data
 
-# Clair3 internal parameters (Conda environment ke mutabiq)
-MODEL_PATH="/opt/conda/share/clair3/models/ont" # Standard Conda Clair3 model path
+# Intermediate files (Jo workflow process karega)
+OUTPUT_BAM="${DATA_DIR}/aligned_reads.bam"
+SORTED_BAM="${DATA_DIR}/sorted_reads.bam"
+OUTPUT_DIR="${DATA_DIR}/shell_variant_output"
+
+# Clair3 internal parameters
+MODEL_PATH="/opt/conda/share/clair3/models/ont"
 PLATFORM="ont"
 THREADS=4
 
-# Ensure containers directory exists
-mkdir -p "$CONTAINER_DIR"
-
-# 1. Build the container if it doesn't exist
+# 1. Check if Singularity Container exists, if not build it
 if [ ! -f "$CONTAINER_NAME" ]; then
     echo "=========================================================="
     echo "Building Singularity container from recipe..."
     echo "=========================================================="
     sudo singularity build "$CONTAINER_NAME" "$RECIPE_FILE"
 else
-    echo "Container already exists at: $CONTAINER_NAME"
+    echo "Container found at: $CONTAINER_NAME"
 fi
 
-# 2. Test the container integrity
-echo "Testing tools inside container..."
-singularity run "$CONTAINER_NAME"
-
-# 3. Create Output Directory if it doesn't exist
+# 2. Output and Data validation
 mkdir -p "$OUTPUT_DIR"
 
-# 4. Launch Clair3 Variant Calling inside Singularity Container
-echo "=========================================================="
-echo "Starting Clair3 Variant Calling Process..."
-echo "=========================================================="
+if [ ! -f "$REF_GENOME" ]; then
+    echo "ERROR: Reference genome missing at $REF_GENOME"
+    exit 1
+fi
 
-# -B /mnt/f:/mnt/f ka matlab hai Windows ki F drive container ko visible ho jaye
+# --- PIPELINE EXECUTION (Inside Singularity) ---
+
+echo "=========================================================="
+echo " STEP 1: Read Alignment using Minimap2"
+echo "=========================================================="
+singularity exec -B "/mnt/f:/mnt/f" "$CONTAINER_NAME" \
+    minimap2 -ax map-ont -t "$THREADS" "$REF_GENOME" "$INPUT_FASTQ" > "$OUTPUT_BAM"
+
+echo "=========================================================="
+echo " STEP 2: BAM Sorting & Indexing using Samtools"
+echo "=========================================================="
+# Sort the alignment file
+singularity exec -B "/mnt/f:/mnt/f" "$CONTAINER_NAME" \
+    samtools sort -@ "$THREADS" -o "$SORTED_BAM" "$OUTPUT_BAM"
+
+# Index the sorted BAM
+singularity exec -B "/mnt/f:/mnt/f" "$CONTAINER_NAME" \
+    samtools index -@ "$THREADS" "$SORTED_BAM"
+
+echo "=========================================================="
+echo " STEP 3: Clair3 Variant Calling Process"
+echo "=========================================================="
 singularity exec -B "/mnt/f:/mnt/f" "$CONTAINER_NAME" \
     run_clair3.sh \
-    --bam_fn="$INPUT_BAM" \
+    --bam_fn="$SORTED_BAM" \
     --ref_fn="$REF_GENOME" \
     --output="$OUTPUT_DIR" \
     --platform="$PLATFORM" \
@@ -54,5 +72,5 @@ singularity exec -B "/mnt/f:/mnt/f" "$CONTAINER_NAME" \
     --threads="$THREADS"
 
 echo "=========================================================="
-echo "Singularity Clair3 Pipeline finished successfully!"
+echo " Pipeline Finished Successfully! All outputs saved on F: drive."
 echo "=========================================================="

@@ -1,0 +1,21 @@
+# Nextflow temporary and execution files
+.nextflow/
+work/
+.nextflow.log*
+
+# Singularity / Apptainer large binary containers
+*.sif
+singularity/*.sif
+
+# Heavy sequencing data and alignment files (F: drive files safe, but keeps local scratch clean)
+*.bam
+*.bai
+*.fastq
+*.fasta
+*.vcf.gz
+*.tbi
+
+# Local outputs that you don't want to sync to GitHub
+shell_variant_output/
+nextflow_variant_output/
+results/

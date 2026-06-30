@@ -66,11 +66,22 @@ nextflow run nextflow/main.nf
 ```
 Note: Nextflow parameters and execution profiles are systematically managed inside nextflow/nextflow.config.
 ---
+Workflow Overview
+
+The core operations designed within this clinical pipeline perform the following processing tasks:
+
+1.Read Alignment: Mapping raw long-read sequencing data using Minimap2 against the provided reference genome.
+
+2.BAM Preprocessing: Sorting and indexing the generated alignment files using Samtools to optimize processing speed.
+
+3.Clair3 Variant Calling: Processing the sorted BAM files inside isolated environments to achieve high-accuracy SNP and INDEL calling.
+---
 Output
-Upon successful execution, the pipeline produces high-accuracy variant calls:
+Upon successful completion, the workflow delivers streamlined clinical genomics outputs:
 
-Clair3 Results: Compressed variant call files (merge_output.vcf.gz and its index .tbi) containing detected SNPs and INDELs.
-
-All intermediate operational directories (such as work/), local run logs (.nextflow.log*), and temporary scratch binaries remain completely untracked to keep the repository clean.
-
+Clair3 Results: A compressed Variant Call Format folder containing merge_output.vcf.gz and its respective index (merge_output.vcf.gz.tbi) containing high-confidence variant calls.
+---
+Version Control Cleanliness: All intermediate operational directories (such as Nextflow's work/ folder), hidden runtime logs (.nextflow.log*), generated execution outputs, and heavy .sif binary containers are explicitly excluded from Git version control via the .gitignore configuration to keep the repository lightweight.
+---
 Maintained by: Eiesha Asif
+---

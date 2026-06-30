@@ -18,6 +18,7 @@ clinical_genomics/
 ├── singularity/
 │   └── pipeline.def
 └── README.md
+
 Requirements:
 Before running the pipelines, ensure the following core tools are installed on your system:
 

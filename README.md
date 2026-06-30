@@ -3,6 +3,7 @@
 A modular Nextflow and Shell-based clinical genomics pipeline designed for long-read sequencing data. This repository provides automated workflows for robust variant calling using **Clair3** to detect high-confidence SNPs and INDELs. 
 
 It supports direct execution via native environments or containerized reproducibility through Singularity/Apptainer.
+
 ---
 ## Repository Structure
 
@@ -21,6 +22,7 @@ clinical_genomics/
 ```
 ---
 Requirements:
+---
 Before running the pipelines, ensure the following core tools are installed on your system:
 
 Nextflow (DSL2 enabled)
@@ -42,6 +44,7 @@ Container Setup
 The Singularity container image (.sif) contains the complete software environment (including Clair3 and required dependencies) to guarantee absolute reproducibility.
 
 Because .sif files are large binaries, they are ignored by Git. You must build your container locally using the provided definition recipe before launching your runs:
+
 ---
 ```
 Bash
@@ -50,6 +53,7 @@ sudo singularity build singularity/pipeline.sif singularity/pipeline.def
 ```
 ---
 Running the Pipelines
+---
 This repository offers two ways to execute the clinical genomic analysis depending on your workflow preference:
 
 Option 1: Native Execution via Master Shell Script

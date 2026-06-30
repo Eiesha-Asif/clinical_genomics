@@ -4,7 +4,7 @@
 set -e
 
 echo "=========================================================="
-echo "Starting Pure Bash Genomic Pipeline (No Containers/Nextflow)"
+echo "Starting Pure Bash Genomic Pipeline 
 echo "=========================================================="
 
 # --- 1. Paths and Parameters Setup ---
